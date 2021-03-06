@@ -13,13 +13,25 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Future<Pages> futureAlbum;
+  Future<Pages> futurePages;
+  final TextEditingController _controller = new TextEditingController();
+  String _searchWord = "";
 
   @override
   void initState() {
     super.initState();
-    futureAlbum = fetchAlbum();
-    print(futureAlbum.toString());
+  }
+
+  void fetch() {
+    setState(() {
+      futurePages = fetchPages(_searchWord);
+    });
+  }
+
+  void _onChanged(String e) {
+    setState(() {
+      _searchWord = e;
+    });
   }
 
   @override
@@ -31,22 +43,44 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Fetch Data Example'),
+          title: Text('Flutter Wikipedia Client'),
         ),
         body: Center(
-          child: FutureBuilder<Pages>(
-            future: futureAlbum,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data.title??"default");
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                FutureBuilder<Pages>(
+                  future: futurePages,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      if (snapshot.data.pageId == -1) {
+                        return Text("Error");
+                      }
+                      else return Text(snapshot.data.title ?? "default");
+                    } else if (snapshot.hasError) {
+                      return Text("${snapshot.error}");
+                    }
 
-              // By default, show a loading spinner.
-              return CircularProgressIndicator();
-            },
-          ),
+                    // By default, show a loading spinner.
+                    // return CircularProgressIndicator();
+                    return Text("");
+                  },
+                ),
+                ElevatedButton(
+                    onPressed: fetch,
+                    child: Text("検索")
+                ),
+                TextField(
+                  enabled: true,
+                  // 入力数
+                  maxLength: 10,
+                  style: TextStyle(color: Colors.blue),
+                  obscureText: false,
+                  maxLines:1 ,
+                  controller: _controller,
+                  onChanged: _onChanged,
+                ),
+              ]),
         ),
       ),
     );
